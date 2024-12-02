@@ -1,21 +1,29 @@
+import kotlin.math.abs
+
 fun main() {
+
     fun part1(input: List<String>): Int {
-        return input.size
+        val first = mutableListOf<Int>()
+        val second = mutableListOf<Int>()
+
+        input.asSequence()
+            .map { it.split(Regex("\\s+")) }
+            .filter { it.isNotEmpty() }
+            .map { it[0].toInt() to it[1].toInt() }
+            .onEach {
+                first.add(it.first)
+                second.add(it.second)
+            }
+            .count()
+
+        first.sort()
+        second.sort()
+
+        return first.zip(second)
+            .fold(0) { acc, pair -> acc + abs(pair.first - pair.second) }
     }
-
-    fun part2(input: List<String>): Int {
-        return input.size
-    }
-
-    // Test if implementation meets criteria from the description, like:
-    check(part1(listOf("test_input")) == 1)
-
-    // Or read a large test input from the `src/Day01_test.txt` file:
-    val testInput = readInput("Day01_test")
-    check(part1(testInput) == 1)
 
     // Read the input from the `src/Day01.txt` file.
-    val input = readInput("Day01")
+    val input = readInput("input/Day01")
     part1(input).println()
-    part2(input).println()
 }
