@@ -1,61 +1,131 @@
-import java.io.BufferedReader
-import kotlin.io.path.Path
-import kotlin.io.path.reader
-
 fun main() {
 
-    fun part1(reader: BufferedReader): Int = reader.useLines {
-        it.sumOf { findValidOccurrences(it) }
-    }
+    fun part1(input: List<String>): Int {
+        var count = 0
+        val maxX = input.firstOrNull()?.lastIndex ?: -1
+        val maxY = input.lastIndex
 
-    fun part2(input: String): Int {
-        val firstWindow = firstWindow(input)
-        return findValidOccurrences(firstWindow) +
-                otherWindows(input.replace(firstWindow, "")).sum()
-    }
-
-    part1(Path("src/sample/Day03_part2.txt").reader().buffered(2048)).println()
-    part2(readInput("input/Day03").joinToString(separator = "")).println()
-}
-
-private fun firstWindow(input: String): String {
-    val windowEnd = input.indexOf("don't()", ignoreCase = true)
-    return input.substring(0..<windowEnd)
-}
-
-private fun otherWindows(input: String): List<Int> {
-    val input = StringBuilder(input) // Explicit shadowing.
-    val sumList = mutableListOf<Int>()
-
-    while (input.isNotEmpty()) {
-        var start = input.indexOf("do()")
-        if (start == -1) break // No starting marker found.
-
-        var end = input.safeIndexOf("don't()")
-        if (end < start) { // don't() before do()
-            input.replace(0, start, "")
-            start = 0
-            end = input.safeIndexOf("don't()")
+        for (y in 0..maxY) {
+            for (x in 0..maxX) {
+                if (input[x][y] != 'X') continue
+                count += findOccurrencesCountAround(input, x to y, 0 to maxX, 0 to maxY)
+            }
         }
 
-        sumList.add(findValidOccurrences(input.substring(start, end)))
-        input.replace(0, end, "")
+        return count
     }
 
-    return sumList
-}
-
-private fun java.lang.StringBuilder.safeIndexOf(s: String): Int {
-    val potentialMatch = this.indexOf(s)
-    return if (potentialMatch == -1) {
-        this.lastIndex
-    } else {
-        potentialMatch
+    fun part2(input: List<String>): Int {
+        return 0 // TODO(gs)
     }
+
+    val input = readInput("sample/Day04_part2")
+    part1(input).println()
+    part2(input).println()
 }
 
-private fun findValidOccurrences(input: String): Int {
-    return Regex("""mul\((\d+),(\d+)\)""").findAll(input)
-        .map { it.groupValues[1].toInt() * it.groupValues[2].toInt() }
-        .sum()
+private fun findOccurrencesCountAround(
+    input: List<String>,
+    coordinates: Pair<Int, Int>,
+    xLimits: Pair<Int, Int>,
+    yLimits: Pair<Int, Int>,
+): Int {
+    val MAS = "MAS"
+    var count = 0
+    Move.entries.forEach { move ->
+        when (move) {
+            Move.UP -> {
+                if (coordinates.second - 3 >= yLimits.first) {
+                    var found = ""
+                    repeat(3) { index ->
+                        found += input[coordinates.first][coordinates.second + (move.yTravel * (index + 1))]
+                    }
+                    if (found == MAS) count++
+                }
+            }
+
+            Move.DOWN -> {
+                if (coordinates.second + 3 <= yLimits.second) {
+                    var found = ""
+                    repeat(3) { index ->
+                        found += input[coordinates.first][coordinates.second + (move.yTravel * (index + 1))]
+                    }
+                    if (found == MAS) count++
+                }
+            }
+
+            Move.LEFT -> {
+                if (coordinates.first - 3 >= xLimits.first) {
+                    var found = ""
+                    repeat(3) { index ->
+                        found += input[coordinates.first + (move.xTravel * (index + 1))][coordinates.second]
+                    }
+                    if (found == MAS) count++
+                }
+            }
+
+            Move.RIGHT -> {
+                if (coordinates.first + 3 <= xLimits.second) {
+                    var found = ""
+                    repeat(3) { index ->
+                        found += input[coordinates.first + (move.xTravel * (index + 1))][coordinates.second]
+                    }
+                    if (found == MAS) count++
+                }
+            }
+
+            Move.UP_LEFT -> {
+                if (coordinates.second - 3 >= yLimits.first && coordinates.first - 3 >= xLimits.first) {
+                    var found = ""
+                    repeat(3) { iteration ->
+                        found += input[coordinates.first + (move.xTravel * (iteration + 1))][coordinates.second + (move.yTravel * (iteration + 1))]
+                    }
+                    if (found == MAS) count++
+                }
+            }
+
+            Move.UP_RIGHT -> {
+                if (coordinates.second - 3 >= yLimits.first && coordinates.first + 3 <= xLimits.second) {
+                    var found = ""
+                    repeat(3) { iteration ->
+                        found += input[coordinates.first + (move.xTravel * (iteration + 1))][coordinates.second + (move.yTravel * (iteration + 1))]
+                    }
+                    if (found == MAS) count++
+                }
+            }
+
+            Move.DOWN_LEFT -> {
+                if (coordinates.second + 3 <= yLimits.second && coordinates.first - 3 >= xLimits.first) {
+                    var found = ""
+                    repeat(3) { iteration ->
+                        found += input[coordinates.first + (move.xTravel * (iteration + 1))][coordinates.second + (move.yTravel * (iteration + 1))]
+                    }
+                    if (found == MAS) count++
+                }
+            }
+
+            Move.DOWN_RIGHT -> {
+                if (coordinates.second + 3 <= yLimits.second && coordinates.first + 3 <= xLimits.second) {
+                    var found = ""
+                    repeat(3) { iteration ->
+                        found += input[coordinates.first + (move.xTravel * (iteration + 1))][coordinates.second + (move.yTravel * (iteration + 1))]
+                    }
+                    if (found == MAS) count++
+                }
+            }
+        }
+    }
+
+    return count
+}
+
+private enum class Move(val xTravel: Int, val yTravel: Int) {
+    UP(0, -1),
+    DOWN(0, 1),
+    LEFT(-1, 0),
+    RIGHT(1, 0),
+    UP_LEFT(-1, -1),
+    UP_RIGHT(1, -1),
+    DOWN_LEFT(-1, 1),
+    DOWN_RIGHT(1, 1)
 }
