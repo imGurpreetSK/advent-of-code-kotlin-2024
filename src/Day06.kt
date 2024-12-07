@@ -14,14 +14,14 @@ fun main() {
 
         val visited = mutableSetOf(currentPosition)
         while (true) {
-            when (val next = findNext(input, currentPosition, currentDirection!!)) {
+            when (findNext(input, currentPosition, currentDirection!!)) {
                 NextElement.Obstruction -> currentDirection = currentDirection!!.next()
 
                 is NextElement.Empty -> {
-                    if (!visited.contains(next.x to next.y)) {
-                        visited.add(next.x to next.y)
-                    }
                     currentPosition = currentPosition.advance(currentDirection!!)
+                    if (!visited.contains(currentPosition)) {
+                        visited.add(currentPosition)
+                    }
                 }
 
                 NextElement.Exit -> break
